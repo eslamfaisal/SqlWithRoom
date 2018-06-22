@@ -1,3 +1,5 @@
+package eslam.example.com.sqlwithroom;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -12,8 +14,14 @@ public class AppExecutors {
     public static AppExecutors getsInstance(){
         if (sInstance == null){
             synchronized (LOCK){
-                sInstance = new AppExecutors(Executors.newSingleThreadExecutor());
+                sInstance = new
+                        AppExecutors(Executors.newSingleThreadExecutor());
             }
         }
+        return sInstance;
+    }
+
+    public Executor getDiskIo(){
+     return this.diskIo;
     }
 }

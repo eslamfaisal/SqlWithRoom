@@ -10,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 
+import java.util.List;
+
 import eslam.example.com.sqlwithroom.database.AppDatabase;
 import eslam.example.com.sqlwithroom.database.TaskEntry;
 
@@ -24,7 +26,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
     private RecyclerView mRecyclerView;
     private TaskAdapter mAdapter;
 
-    private AppDatabase mDb ;
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
         setContentView(R.layout.activity_main);
 
         mDb = AppDatabase.getsInstance(getApplicationContext());
-                // Set the RecyclerView to its corresponding view
+        // Set the RecyclerView to its corresponding view
         mRecyclerView = findViewById(R.id.recyclerViewTasks);
 
         // Set the layout for the RecyclerView to be a linear layout, which measures and
@@ -61,6 +63,11 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                 // Here is where you'll implement swipe to delete
+
+                int position =viewHolder.getAdapterPosition();
+                List<TaskEntry> task = mAdapter.getTask();
+                mDb.taskDao().deleteTask(task.get(position));
+                retrieveTasks();
             }
         }).attachToRecyclerView(mRecyclerView);
 
@@ -79,18 +86,34 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
                 startActivity(addTaskIntent);
             }
         });
-
-
     }
 
     @Override
     public void onItemClickListener(int itemId) {
         // Launch AddTaskActivity adding the itemId as an extra in the intent
+        Intent intent = new Intent(MainActivity.this,AddTaskActivity.class);
+        intent.putExtra(AddTaskActivity.EXTRA_TASK_ID,itemId);
+        startActivity(intent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mAdapter.setTasks(mDb.taskDao().loadAllTasks());
+        retrieveTasks();
+    }
+
+    private void retrieveTasks() {
+        AppExecutors.getsInstance().getDiskIo().execute(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.setTasks(mDb.taskDao().loadAllTasks());
+                    }
+                });
+
+            }
+        });
     }
 }

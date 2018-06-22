@@ -53,6 +53,20 @@ public class AddTaskActivity extends AppCompatActivity {
             mButton.setText(R.string.update_button);
             if (mTaskId == DEFAULT_TASK_ID) {
                 // populate the UI
+                mTaskId = intent.getExtras().getInt(AddTaskActivity.EXTRA_TASK_ID);
+                AppExecutors.getsInstance().getDiskIo().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        final TaskEntry taskEntry = mDb.taskDao().loadTaskById(mTaskId);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                populateUI(taskEntry);
+                            }
+                        });
+
+                    }
+                });
             }
         }
     }
@@ -86,6 +100,12 @@ public class AddTaskActivity extends AppCompatActivity {
      */
     private void populateUI(TaskEntry task) {
 
+        if (task == null) {
+            return;
+        }
+
+        mEditText.setText(task.getDescription());
+        setPriorityInViews(task.getPriority());
     }
 
     /**
@@ -98,9 +118,20 @@ public class AddTaskActivity extends AppCompatActivity {
         String description = mEditText.getText().toString();
         Date date = new Date();
 
-        TaskEntry taskEntry = new TaskEntry(description,priority,date);
-        mDb.taskDao().insertTask(taskEntry);
-        finish();
+        final TaskEntry taskEntry = new TaskEntry(description, priority, date);
+        AppExecutors.getsInstance().getDiskIo().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (mTaskId == DEFAULT_TASK_ID) {
+                    mDb.taskDao().insertTask(taskEntry);
+                } else {
+                    taskEntry.setId(mTaskId);
+                    mDb.taskDao().updateTask(taskEntry);
+                }
+                finish();
+            }
+        });
+
     }
 
     /**
