@@ -1,7 +1,10 @@
 package eslam.example.com.sqlwithroom;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -103,17 +106,13 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
     }
 
     private void retrieveTasks() {
-        AppExecutors.getsInstance().getDiskIo().execute(new Runnable() {
+        LiveData<List<TaskEntry>> task = mDb.taskDao().loadAllTasks();
+        task.observe(this, new Observer<List<TaskEntry>>() {
             @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.setTasks(mDb.taskDao().loadAllTasks());
-                    }
-                });
-
+            public void onChanged(@Nullable List<TaskEntry> taskEntries) {
+                mAdapter.setTasks(taskEntries);
             }
         });
+
     }
 }
