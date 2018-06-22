@@ -1,6 +1,9 @@
 package eslam.example.com.sqlwithroom;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -54,19 +57,14 @@ public class AddTaskActivity extends AppCompatActivity {
             if (mTaskId == DEFAULT_TASK_ID) {
                 // populate the UI
                 mTaskId = intent.getExtras().getInt(AddTaskActivity.EXTRA_TASK_ID);
-                AppExecutors.getsInstance().getDiskIo().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        final TaskEntry taskEntry = mDb.taskDao().loadTaskById(mTaskId);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                populateUI(taskEntry);
-                            }
-                        });
-
-                    }
-                });
+                final LiveData<TaskEntry> task = mDb.taskDao().loadTaskById(mTaskId);
+               task.observe(this, new Observer<TaskEntry>() {
+                   @Override
+                   public void onChanged(@Nullable TaskEntry taskEntry) {
+                       task.removeObserver(this);
+                       populateUI(taskEntry);
+                   }
+               });
             }
         }
     }

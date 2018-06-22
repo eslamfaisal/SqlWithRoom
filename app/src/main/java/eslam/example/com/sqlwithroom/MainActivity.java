@@ -1,7 +1,7 @@
 package eslam.example.com.sqlwithroom;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
             }
         });
 
-        retrieveTasks();
+        setUpViewModel();
     }
 
     @Override
@@ -102,9 +102,10 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
 
 
 
-    private void retrieveTasks() {
-        LiveData<List<TaskEntry>> task = mDb.taskDao().loadAllTasks();
-        task.observe(this, new Observer<List<TaskEntry>>() {
+    private void setUpViewModel() {
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
+        viewModel.getTask().observe(this, new Observer<List<TaskEntry>>() {
             @Override
             public void onChanged(@Nullable List<TaskEntry> taskEntries) {
                 mAdapter.setTasks(taskEntries);
