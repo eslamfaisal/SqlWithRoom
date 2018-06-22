@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
                 int position =viewHolder.getAdapterPosition();
                 List<TaskEntry> task = mAdapter.getTask();
                 mDb.taskDao().deleteTask(task.get(position));
-                retrieveTasks();
             }
         }).attachToRecyclerView(mRecyclerView);
 
@@ -89,6 +88,8 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
                 startActivity(addTaskIntent);
             }
         });
+
+        retrieveTasks();
     }
 
     @Override
@@ -99,11 +100,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
         startActivity(intent);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        retrieveTasks();
-    }
+
 
     private void retrieveTasks() {
         LiveData<List<TaskEntry>> task = mDb.taskDao().loadAllTasks();
